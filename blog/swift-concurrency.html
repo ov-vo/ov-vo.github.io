@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swift Concurrency 入门指南 — 林宇辰的博客</title>
+  <meta name="description" content="全面介绍 Swift 5.5+ 引入的 async/await、Task、Actor 等并发编程特性。">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta property="og:title" content="Swift Concurrency 入门指南">
+  <meta property="og:description" content="Swift async/await、Task、Actor 并发编程全指南">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.ahhh.fun/blog/swift-concurrency.html">
+  <meta property="article:published_time" content="2025-08-18">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BlogPosting","headline":"Swift Concurrency 入门指南","datePublished":"2025-08-18","author":{"@type":"Person","name":"林宇辰"}}
+  </script>
+  <script>
+    (function(){var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}})();
+  </script>
+</head>
+<body>
+
+  <nav class="nav" role="navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">林宇辰</a>
+      <div class="nav-links">
+        <a href="/">首页</a>
+        <a href="./">文章</a>
+        <a href="../about.html">关于</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-toggle" aria-label="切换主题"><span class="icon">🌙</span></button>
+        <button class="menu-toggle" aria-label="菜单" aria-expanded="false"><span>☰</span></button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container-narrow">
+    <article>
+      <header class="blog-post-header" data-animate="fade">
+        <h1>Swift Concurrency 入门指南</h1>
+        <div class="blog-post-meta">
+          <time datetime="2025-08-18">2025年8月18日</time>
+          <span class="sep">·</span>
+          <span>阅读时间约 7 分钟</span>
+        </div>
+        <div class="blog-post-tags">
+          <span class="tag">Swift</span>
+          <span class="tag">Concurrency</span>
+          <span class="tag">async/await</span>
+        </div>
+      </header>
+
+      <div class="blog-post-content" data-animate>
+        <p>Swift 5.5 引入了一套全新的并发编程模型。告别了 GCD 的回调地狱和 OperationQueue 的繁琐配置，Swift Concurrency 带来了编译器级别的并发安全检查。本文面向已经有 Swift 基础但尚未深入使用新并发模型的开发者。</p>
+
+        <h2>async/await：基础构件</h2>
+        <p><code>async/await</code> 是 Swift Concurrency 的基石。它让异步代码看起来像同步代码：</p>
+
+        <pre><code>// 之前：GCD + completion handler
+func fetchUser(id: String, completion: @escaping (Result&lt;User, Error&gt;) -> Void) {
+    let url = URL(string: "https://api.example.com/users/\(id)")!
+    URLSession.shared.dataTask(with: url) { data, response, error in
+        if let error = error {
+            completion(.failure(error))
+            return
+        }
+        let user = try! JSONDecoder().decode(User.self, from: data!)
+        completion(.success(user))
+    }.resume()
+}
+
+// 之后：async/await
+func fetchUser(id: String) async throws -> User {
+    let url = URL(string: "https://api.example.com/users/\(id)")!
+    let (data, _) = try await URLSession.shared.data(from: url)
+    return try JSONDecoder().decode(User.self, from: data)
+}</code></pre>
+
+        <p>关键区别：</p>
+        <ul>
+          <li>函数签名从 <code>completion: (Result) -> Void</code> 变为 <code>async throws -> User</code></li>
+          <li>调用处从嵌套闭包变为 <code>let user = try await fetchUser(id: "123")</code></li>
+          <li>错误处理回归到 Swift 原生的 <code>try/catch</code> 机制</li>
+        </ul>
+
+        <h2>Task：创建异步上下文</h2>
+        <p><code>Task</code> 是异步工作的容器。你可以在同步代码中创建 Task 来进入异步上下文：</p>
+
+        <pre><code>// 在 SwiftUI 的 .task {} modifier 中
+struct ProfileView: View {
+    @State private var user: User?
+
+    var body: some View {
+        VStack {
+            if let user = user {
+                Text(user.name)
+            } else {
+                ProgressView()
+            }
+        }
+        .task {
+            do {
+                user = try await fetchUser(id: "123")
+            } catch {
+                print("Failed to load user: \(error)")
+            }
+        }
+    }
+}</code></pre>
+
+        <p>Task 的几个重要特性：</p>
+        <ul>
+          <li><strong>结构化并发</strong>：当父 Task 被取消时，所有子 Task 自动取消</li>
+          <li><strong>优先级继承</strong>：子 Task 继承父 Task 的优先级</li>
+          <li><strong>Task.detached</strong>：创建一个与当前上下文无关的独立 Task（谨慎使用）</li>
+        </ul>
+
+        <h2>并发执行：async let 和 Task Group</h2>
+        <p>当需要并行执行多个异步操作时，有两种方式：</p>
+
+        <pre><code>// async let：适合固定数量的并行操作
+func loadDashboard() async throws -> Dashboard {
+    async let user = fetchUser(id: "123")
+    async let notifications = fetchNotifications()
+    async let feed = fetchTimeline()
+
+    return try await Dashboard(
+        user: user,
+        notifications: notifications,
+        feed: feed
+    )
+}
+
+// TaskGroup：适合动态数量的并行操作
+func loadFollowers(ids: [String]) async throws -> [User] {
+    try await withThrowingTaskGroup(of: User.self) { group in
+        for id in ids {
+            group.addTask {
+                try await fetchUser(id: id)
+            }
+        }
+
+        var users: [User] = []
+        for try await user in group {
+            users.append(user)
+        }
+        return users
+    }
+}</code></pre>
+
+        <p><code>async let</code> 语法简洁，但要求你在编译期就知道需要并行执行什么。<code>TaskGroup</code> 更灵活，适合处理动态数量的并发任务。</p>
+
+        <h2>Actor：数据竞争的终结者</h2>
+        <p>Actor 是 Swift 对共享可变状态的解决方案。它保证同一时间只有一个 Task 可以访问 Actor 的内部状态：</p>
+
+        <pre><code>actor DownloadCounter {
+    private var count: Int = 0
+
+    func increment() {
+        count += 1
+    }
+
+    func current() -> Int {
+        count
+    }
+}
+
+let counter = DownloadCounter()
+// 这些访问自动串行化
+await counter.increment()
+let total = await counter.current()</code></pre>
+
+        <p>注意：所有对 Actor 隔离属性的访问都必须使用 <code>await</code>（除非在 Actor 内部或使用 <code>nonisolated</code> 标记）。编译器会在编译期阻止数据竞争，这是 Swift Concurrency 最强大的安全保证。</p>
+
+        <h2>@MainActor：UI 线程安全</h2>
+        <p>在 SwiftUI 中，所有 UI 更新必须在主线程上进行。<code>@MainActor</code> 让编译器自动保证这一点：</p>
+
+        <pre><code>@MainActor
+class ProfileViewModel: ObservableObject {
+    @Published var user: User?
+
+    func load() async {
+        // fetchUser 可能在后台线程运行
+        // 但赋值给 @Published 属性自动在主线程执行
+        user = try? await APIService.fetchUser(id: "123")
+    }
+}</code></pre>
+
+        <h2>Sendable：跨并发域安全传递</h2>
+        <p><code>Sendable</code> 协议标记了可以安全地在并发域之间传递的类型。值类型（struct、enum）在成员都是 Sendable 时自动符合，但 class 需要手动实现。</p>
+
+        <pre><code>// 自动符合 Sendable（所有成员是值类型）
+struct User: Codable, Sendable {
+    let id: String
+    let name: String
+}
+
+// 需要手动标注
+final class SharedCache: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storage: [String: Data] = [:]
+
+    func get(_ key: String) -> Data? {
+        lock.lock(); defer { lock.unlock() }
+        return storage[key]
+    }
+}</code></pre>
+
+        <h2>总结</h2>
+        <p>Swift Concurrency 不仅仅是一组新的 API——它重新定义了我们编写异步代码的方式。编译器级别的安全检查、结构化的任务管理和简洁的语法，让并发编程从"小心别踩坑"变成了"编译器帮你看路"。</p>
+        <p>如果你还在使用 GCD 和 completion handler，我强烈建议你在下一个项目中尝试 Swift Concurrency。一旦用过，你就不想回去了。</p>
+      </div>
+
+      <div class="blog-post-footer">
+        <a href="./" class="btn btn-ghost">← 返回文章列表</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-nav">
+        <a href="/">首页</a>
+        <a href="./">文章</a>
+        <a href="../about.html">关于</a>
+      </div>
+      <p class="footer-copyright">&copy; 2025 林宇辰. Powered by GitHub Pages.</p>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

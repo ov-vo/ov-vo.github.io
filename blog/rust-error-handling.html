@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rust 错误处理最佳实践 — 林宇辰的博客</title>
+  <meta name="description" content="深入探讨 Rust 中 Result、thiserror、anyhow 的使用场景与组合策略。">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta property="og:title" content="Rust 错误处理最佳实践">
+  <meta property="og:description" content="Result、thiserror、anyhow 的使用场景与组合策略">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.ahhh.fun/blog/rust-error-handling.html">
+  <meta property="article:published_time" content="2025-11-28">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BlogPosting","headline":"Rust 错误处理最佳实践","datePublished":"2025-11-28","author":{"@type":"Person","name":"林宇辰"}}
+  </script>
+  <script>
+    (function(){var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}})();
+  </script>
+</head>
+<body>
+
+  <nav class="nav" role="navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">林宇辰</a>
+      <div class="nav-links">
+        <a href="/">首页</a>
+        <a href="./">文章</a>
+        <a href="../about.html">关于</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-toggle" aria-label="切换主题"><span class="icon">🌙</span></button>
+        <button class="menu-toggle" aria-label="菜单" aria-expanded="false"><span>☰</span></button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container-narrow">
+    <article>
+      <header class="blog-post-header" data-animate="fade">
+        <h1>Rust 错误处理最佳实践</h1>
+        <div class="blog-post-meta">
+          <time datetime="2025-11-28">2025年11月28日</time>
+          <span class="sep">·</span>
+          <span>阅读时间约 7 分钟</span>
+        </div>
+        <div class="blog-post-tags">
+          <span class="tag">Rust</span>
+          <span class="tag">Error Handling</span>
+          <span class="tag">最佳实践</span>
+        </div>
+      </header>
+
+      <div class="blog-post-content" data-animate>
+        <p>Rust 的错误处理机制是其最出色的设计之一。<code>Result&lt;T, E&gt;</code> 类型强制开发者在编译期就考虑错误路径，避免了运行时意外的 panic。但随着项目规模增长，如何在库代码和应用代码中合理地组织错误类型，成了一个值得深入探讨的话题。</p>
+        <p>本文将结合我在 <strong>MarkdownKit</strong>（一个 Rust Markdown 解析库）开发过程中的实际经验，分享 Rust 错误处理的最佳实践。</p>
+
+        <h2>基础：自定义错误类型</h2>
+        <p>在小型库或模块中，推荐使用 <code>thiserror</code> 来定义错误类型。它提供了 <code>#[derive(Error)]</code> 宏，让你用声明式的方式定义错误：</p>
+
+        <pre><code>use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum MarkdownError {
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+
+    #[error("Parse error at line {line}: {message}")]
+    Parse { line: usize, message: String },
+
+    #[error("Invalid heading level: {0} (must be 1-6)")]
+    InvalidHeadingLevel(u8),
+
+    #[error("Unclosed delimiter: {0}")]
+    UnclosedDelimiter(String),
+}</code></pre>
+
+        <p>thiserror 的几个关键优势：</p>
+        <ul>
+          <li><strong><code>#[from]</code></strong> 自动生成 <code>From</code> 实现，方便使用 <code>?</code> 操作符传播上游错误</li>
+          <li><strong><code>#[error("...")]</code></strong> 自动生成 <code>Display</code> 和 <code>std::error::Error</code> 实现</li>
+          <li>支持结构体变体和元组变体，灵活携带上下文信息</li>
+        </ul>
+
+        <h2>库 vs 应用：两种不同的哲学</h2>
+        <p>这是 Rust 社区中一个经典的区分：</p>
+
+        <div class="card" style="margin: var(--spacing-lg) 0;">
+          <p style="margin-bottom: var(--spacing-sm);"><strong>📦 库代码（Library）</strong></p>
+          <p style="margin-bottom: 0;">暴露明确的、结构化的错误类型，让调用者可以精确地 match 和处理每种错误。使用 <code>thiserror</code> 定义枚举，作为公开 API 的一部分。</p>
+        </div>
+
+        <div class="card" style="margin: var(--spacing-lg) 0;">
+          <p style="margin-bottom: var(--spacing-sm);"><strong>🖥️ 应用代码（Application）</strong></p>
+          <p style="margin-bottom: 0;">关注的是"把错误信息清晰地报告给用户或日志"，而非让调用者进行细粒度匹配。使用 <code>anyhow</code> 简化错误传播链。</p>
+        </div>
+
+        <h2>实际案例：MarkdownKit 的解析流程</h2>
+        <p>在 MarkdownKit 中，解析过程涉及多个阶段——词法分析、块解析、行内解析、HTML 渲染。每个阶段都可能出错。我采用了<strong>分层错误类型</strong>的设计：</p>
+
+        <pre><code>// 公开 API 错误类型
+#[derive(Error, Debug)]
+pub enum MarkdownError {
+    #[error("Parse error: {0}")]
+    Parse(#[from] ParseError),
+
+    #[error("Render error: {0}")]
+    Render(#[from] RenderError),
+
+    #[error("IO error: {0}")]
+    Io(#[from] std::io::Error),
+}
+
+// 内部解析错误（不公开）
+#[derive(Error, Debug)]
+enum ParseError {
+    #[error("{0}")]
+    Message(String),
+}
+
+// 内部渲染错误（不公开）
+#[derive(Error, Debug)]
+enum RenderError {
+    #[error("Unsupported node type at position {pos}")]
+    UnsupportedNode { pos: usize },
+}</code></pre>
+
+        <p>这样设计的好处是：外部调用者只需要关心 <code>MarkdownError</code>，而内部的解析和渲染实现可以自由演进而不影响公开 API。</p>
+
+        <h2>使用 anyhow 处理"足够好"的错误</h2>
+        <p>在 CLI 工具或一次性脚本中，anyhow 是更好的选择。它让你无需定义自己的错误类型：</p>
+
+        <pre><code>use anyhow::{Context, Result};
+
+fn read_config(path: &str) -> Result&lt;Config&gt; {
+    let content = std::fs::read_to_string(path)
+        .with_context(|| format!("Failed to read config file: {}", path))?;
+
+    let config: Config = toml::from_str(&content)
+        .with_context(|| "Failed to parse config TOML")?;
+
+    Ok(config)
+}</code></pre>
+
+        <p><code>.with_context()</code> 是 anyhow 最强大的功能之一。它为错误链添加人类可读的上下文，形成清晰的错误追踪：</p>
+
+        <pre><code>Error: Failed to read config file: /etc/myapp/config.toml
+
+Caused by:
+    0: No such file or directory (os error 2)</code></pre>
+
+        <h2>何时选择什么？</h2>
+        <table style="width: 100%; border-collapse: collapse; margin: var(--spacing-lg) 0;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <th style="text-align: left; padding: 8px 12px;">场景</th>
+              <th style="text-align: left; padding: 8px 12px;">推荐方案</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--divider);">
+              <td style="padding: 8px 12px;">公开 Rust 库</td>
+              <td style="padding: 8px 12px;"><code>thiserror</code> + 枚举</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--divider);">
+              <td style="padding: 8px 12px;">CLI 工具</td>
+              <td style="padding: 8px 12px;"><code>anyhow</code></td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--divider);">
+              <td style="padding: 8px 12px;">Web 服务（如 Axum/Actix）</td>
+              <td style="padding: 8px 12px;">自定义错误 + <code>IntoResponse</code></td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--divider);">
+              <td style="padding: 8px 12px;">混合场景</td>
+              <td style="padding: 8px 12px;">库用 <code>thiserror</code>，应用层用 <code>anyhow</code> 包装</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>总结</h2>
+        <p>Rust 的错误处理生态已经非常成熟。记住这条黄金法则：</p>
+
+        <blockquote>
+          <p><strong>库代码暴露类型化的错误（thiserror），应用代码关注错误报告（anyhow）。</strong>两种方案不是互斥的——你可以在同一个项目的不同层次使用它们。</p>
+        </blockquote>
+
+        <p>最终目标是让你的代码既健壮又易于维护。错误处理本身也是一种 API 设计——好的错误信息能让调用者快速定位问题，而不必深入你的实现细节。</p>
+      </div>
+
+      <div class="blog-post-footer">
+        <a href="./" class="btn btn-ghost">← 返回文章列表</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-nav">
+        <a href="/">首页</a>
+        <a href="./">文章</a>
+        <a href="../about.html">关于</a>
+      </div>
+      <p class="footer-copyright">&copy; 2025 林宇辰. Powered by GitHub Pages.</p>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

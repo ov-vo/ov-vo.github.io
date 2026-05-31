@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>林宇辰的博客</title>
+    <link>https://www.ahhh.fun/blog/</link>
+    <description>技术分享与生活随想</description>
+    <language>zh-CN</language>
+    <lastBuildDate>Mon, 15 Dec 2025 00:00:00 +0800</lastBuildDate>
+    <atom:link href="https://www.ahhh.fun/blog/index.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>从零搭建 SwiftUI macOS 菜单栏应用</title>
+      <link>https://www.ahhh.fun/blog/swiftui-menubar-app.html</link>
+      <pubDate>Mon, 15 Dec 2025 00:00:00 +0800</pubDate>
+      <description>介绍如何使用 SwiftUI 的 MenuBarExtra API 构建一个原生的 macOS 菜单栏应用。</description>
+    </item>
+    <item>
+      <title>Rust 错误处理最佳实践</title>
+      <link>https://www.ahhh.fun/blog/rust-error-handling.html</link>
+      <pubDate>Fri, 28 Nov 2025 00:00:00 +0800</pubDate>
+      <description>深入探讨 Rust 中 Result、thiserror、anyhow 的使用场景与组合策略。</description>
+    </item>
+    <item>
+      <title>我的机械键盘折腾之路</title>
+      <link>https://www.ahhh.fun/blog/mechanical-keyboard.html</link>
+      <pubDate>Mon, 10 Nov 2025 00:00:00 +0800</pubDate>
+      <description>从 Cherry 原厂到国产客制化，三年机械键盘折腾历程。</description>
+    </item>
+    <item>
+      <title>为什么我放弃了 Notion 转向 Obsidian</title>
+      <link>https://www.ahhh.fun/blog/notion-to-obsidian.html</link>
+      <pubDate>Wed, 22 Oct 2025 00:00:00 +0800</pubDate>
+      <description>从 Notion 到 Obsidian 的迁移心路历程和技术方案。</description>
+    </item>
+    <item>
+      <title>GitHub Actions 自动化部署实战</title>
+      <link>https://www.ahhh.fun/blog/github-actions-deploy.html</link>
+      <pubDate>Fri, 05 Sep 2025 00:00:00 +0800</pubDate>
+      <description>使用 GitHub Actions 搭建 CI/CD 流水线实现自动测试构建部署。</description>
+    </item>
+    <item>
+      <title>Swift Concurrency 入门指南</title>
+      <link>https://www.ahhh.fun/blog/swift-concurrency.html</link>
+      <pubDate>Mon, 18 Aug 2025 00:00:00 +0800</pubDate>
+      <description>Swift async/await、Task、Actor 并发编程全面指南。</description>
+    </item>
+    <item>
+      <title>咖啡手冲入门：从器具到手法</title>
+      <link>https://www.ahhh.fun/blog/pour-over-coffee.html</link>
+      <pubDate>Wed, 30 Jul 2025 00:00:00 +0800</pubDate>
+      <description>手冲咖啡新手指南：器具选择、咖啡豆推荐和经典注水手法。</description>
+    </item>
+    <item>
+      <title>设计系统搭建：颜色、字体与间距</title>
+      <link>https://www.ahhh.fun/blog/design-system-guide.html</link>
+      <pubDate>Thu, 12 Jun 2025 00:00:00 +0800</pubDate>
+      <description>从零搭建前端设计系统的基础篇——颜色体系、字体排版和间距系统。</description>
+    </item>
+  </channel>
+</rss>

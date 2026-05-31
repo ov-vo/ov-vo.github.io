@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>从零搭建 SwiftUI macOS 菜单栏应用 — 林宇辰的博客</title>
+  <meta name="description" content="介绍如何使用 SwiftUI 的 MenuBarExtra API 构建一个原生的 macOS 菜单栏应用，从项目初始化到发布 App Store，完整流程详解。">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta property="og:title" content="从零搭建 SwiftUI macOS 菜单栏应用">
+  <meta property="og:description" content="SwiftUI MenuBarExtra API 完整教程">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.ahhh.fun/blog/swiftui-menubar-app.html">
+  <meta property="article:published_time" content="2025-12-15">
+  <meta property="article:author" content="林宇辰">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "从零搭建 SwiftUI macOS 菜单栏应用",
+    "datePublished": "2025-12-15",
+    "author": {"@type": "Person", "name": "林宇辰"},
+    "description": "SwiftUI MenuBarExtra API 完整教程"
+  }
+  </script>
+  <script>
+    (function(){var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}})();
+  </script>
+</head>
+<body>
+
+  <nav class="nav" role="navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">林宇辰</a>
+      <div class="nav-links">
+        <a href="/">首页</a>
+        <a href="./">文章</a>
+        <a href="../about.html">关于</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-toggle" aria-label="切换主题"><span class="icon">🌙</span></button>
+        <button class="menu-toggle" aria-label="菜单" aria-expanded="false"><span>☰</span></button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container-narrow">
+    <article>
+      <header class="blog-post-header" data-animate="fade">
+        <h1>从零搭建 SwiftUI macOS 菜单栏应用</h1>
+        <div class="blog-post-meta">
+          <time datetime="2025-12-15">2025年12月15日</time>
+          <span class="sep">·</span>
+          <span>阅读时间约 8 分钟</span>
+        </div>
+        <div class="blog-post-tags">
+          <span class="tag">SwiftUI</span>
+          <span class="tag">macOS</span>
+          <span class="tag">教程</span>
+        </div>
+      </header>
+
+      <div class="blog-post-content" data-animate>
+        <p>macOS 菜单栏应用是一种轻量级的桌面工具，常驻于屏幕顶部的菜单栏中，用户可以随时点击图标快速访问功能。得益于 macOS 13 Ventura 引入的 <code>MenuBarExtra</code> API，使用 SwiftUI 构建一个菜单栏应用变得前所未有的简单。本文将带你从零开始，逐步完成一个完整的菜单栏应用。</p>
+
+        <h2>为什么选择菜单栏应用？</h2>
+        <p>与传统的窗口应用不同，菜单栏应用具有独特的优势：</p>
+        <ul>
+          <li><strong>常驻可见</strong>——始终显示在菜单栏中，用户无需切换窗口即可访问</li>
+          <li><strong>轻量快捷</strong>——没有复杂的窗口层级，交互路径极短</li>
+          <li><strong>不占空间</strong>——不会在 Dock 中占用位置，适合后台常驻工具</li>
+        </ul>
+        <p>常见的菜单栏应用包括天气工具、剪贴板管理器、番茄钟、系统监控等。本文我们将构建一个简洁的<strong>倒数日计数器</strong>，用于跟踪重要日期。</p>
+
+        <h2>项目初始化</h2>
+        <p>打开 Xcode，创建一个新的 macOS App 项目：</p>
+        <ol>
+          <li>选择 <strong>macOS → App</strong> 模板</li>
+          <li>Interface 选择 <strong>SwiftUI</strong></li>
+          <li>Language 选择 <strong>Swift</strong></li>
+        </ol>
+
+        <p>在项目设置中，将 <code>Application Scene Manifest</code> 中的 <strong>Application has menu bar</strong> 取消勾选——因为我们不需要传统的菜单栏，只需要一个菜单栏图标。</p>
+
+        <h2>App 入口：MenuBarExtra</h2>
+        <p>在 App 的入口文件中，我们使用 <code>MenuBarExtra</code> 场景替代默认的 <code>WindowGroup</code>：</p>
+
+        <pre><code>import SwiftUI
+
+@main
+struct CountdownApp: App {
+    var body: some Scene {
+        MenuBarExtra("倒数日", systemImage: "calendar.badge.clock") {
+            ContentView()
+        }
+        .menuBarExtraStyle(.window)
+    }
+}</code></pre>
+
+        <p>这里有几个关键点：</p>
+        <ul>
+          <li><code>MenuBarExtra</code> 的第一个参数是辅助功能标签，第二个是 SF Symbol 图标名称</li>
+          <li><code>.menuBarExtraStyle(.window)</code> 让点击后弹出的是一个 SwiftUI 视图窗口，而非默认的菜单样式</li>
+          <li>你也可以使用 <code>.menu</code> 样式来呈现一个传统的下拉菜单</li>
+        </ul>
+
+        <h2>构建内容视图</h2>
+        <p>接下来我们实现 <code>ContentView</code>，展示即将到来的重要日期和剩余天数：</p>
+
+        <pre><code>struct ContentView: View {
+    @State private var events: [CountdownEvent] = [
+        CountdownEvent(name: "春节", date: Calendar.current.date(from: DateComponents(year: 2026, month: 2, day: 17))!),
+        CountdownEvent(name: "WWDC", date: Calendar.current.date(from: DateComponents(year: 2026, month: 6, day: 1))!),
+    ]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Text("倒数日")
+                .font(.headline)
+                .padding()
+
+            Divider()
+
+            ForEach(events) { event in
+                CountdownRow(event: event)
+                if event.id != events.last?.id {
+                    Divider().padding(.horizontal)
+                }
+            }
+
+            Divider()
+
+            Button("退出") {
+                NSApplication.shared.terminate(nil)
+            }
+            .padding(8)
+        }
+        .frame(width: 280)
+    }
+}
+
+struct CountdownEvent: Identifiable {
+    let id = UUID()
+    let name: String
+    let date: Date
+
+    var daysRemaining: Int {
+        Calendar.current.dateComponents([.day], from: Date(), to: date).day ?? 0
+    }
+}
+
+struct CountdownRow: View {
+    let event: CountdownEvent
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(event.name)
+                    .font(.system(size: 14, weight: .medium))
+                Text(event.date, style: .date)
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Text("\(event.daysRemaining) 天")
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundColor(event.daysRemaining <= 7 ? .orange : .blue)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+    }
+}</code></pre>
+
+        <h2>设置与偏好</h2>
+        <p>一个完整的菜单栏应用通常需要设置窗口。我们使用 SwiftUI 的 <code>Settings</code> 场景来实现：</p>
+
+        <pre><code>var body: some Scene {
+    MenuBarExtra("倒数日", systemImage: "calendar.badge.clock") {
+        ContentView()
+    }
+    .menuBarExtraStyle(.window)
+
+    Settings {
+        SettingsView()
+    }
+}</code></pre>
+
+        <p><code>SettingsView</code> 可以通过菜单栏的 "倒数日 → 设置..." 或快捷键 <kbd>⌘,</kbd> 打开。在其中我们可以让用户自定义要跟踪的事件列表，并使用 <code>@AppStorage</code> 持久化数据。</p>
+
+        <h2>定时更新</h2>
+        <p>由于天数每天会变化，我们需要在午夜自动刷新界面。监听 <code>NSCalendarDayChanged</code> 通知即可：</p>
+
+        <pre><code>struct ContentView: View {
+    @State private var events: [CountdownEvent] = loadEvents()
+    @State private var refreshID = UUID() // force refresh
+
+    var body: some View {
+        // ... view content
+        .id(refreshID)
+        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in
+            refreshID = UUID()
+        }
+    }
+}</code></pre>
+
+        <h2>发布到 App Store</h2>
+        <p>要将应用发布到 Mac App Store，需要完成以下步骤：</p>
+        <ol>
+          <li>在 Xcode 中配置 <strong>Signing & Capabilities</strong>，选择你的开发团队</li>
+          <li>在 App Store Connect 中创建新 App 记录</li>
+          <li>配置 <strong>App Sandbox</strong> 权限（菜单栏应用通常只需要最低权限）</li>
+          <li>Archive 并上传到 App Store Connect</li>
+          <li>填写隐私政策、截图和描述</li>
+          <li>提交审核</li>
+        </ol>
+
+        <p>注意：菜单栏应用在上架时需要提供清晰的用户引导，因为用户可能不知道如何找到菜单栏中的新图标。建议在首次启动时提供一个引导提示。</p>
+
+        <h2>总结</h2>
+        <p><code>MenuBarExtra</code> 是 SwiftUI 在 macOS 平台上的一大进步。过去要用 <code>NSStatusBarButton</code> 和 AppKit 混合开发，现在几行 SwiftUI 代码就能搞定。如果你是 SwiftUI 开发者，不妨动手试一试，把经常用到的小工具做成菜单栏应用——这是一种非常适合个人开发者切入 macOS 生态的方式。</p>
+
+        <p>完整代码已托管在 <a href="https://github.com/ov-vo" target="_blank" rel="noopener">GitHub</a>，欢迎参考和 Star ⭐</p>
+      </div>
+
+      <div class="blog-post-footer">
+        <a href="./" class="btn btn-ghost">← 返回文章列表</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-nav">
+        <a href="/">首页</a>
+        <a href="./">文章</a>
+        <a href="../about.html">关于</a>
+      </div>
+      <p class="footer-copyright">&copy; 2025 林宇辰. Powered by GitHub Pages.</p>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

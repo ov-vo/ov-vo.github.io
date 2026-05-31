@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>为什么我放弃了 Notion 转向 Obsidian — 林宇辰的博客</title>
+  <meta name="description" content="经过两年重度使用 Notion 后，我决定将所有笔记迁移到 Obsidian。这篇文章分享我的迁移心路历程和技术方案。">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta property="og:title" content="为什么我放弃了 Notion 转向 Obsidian">
+  <meta property="og:description" content="从 Notion 到 Obsidian 的迁移历程与技术方案">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.ahhh.fun/blog/notion-to-obsidian.html">
+  <meta property="article:published_time" content="2025-10-22">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BlogPosting","headline":"为什么我放弃了 Notion 转向 Obsidian","datePublished":"2025-10-22","author":{"@type":"Person","name":"林宇辰"}}
+  </script>
+  <script>
+    (function(){var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}})();
+  </script>
+</head>
+<body>
+
+  <nav class="nav" role="navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">林宇辰</a>
+      <div class="nav-links">
+        <a href="/">首页</a>
+        <a href="./">文章</a>
+        <a href="../about.html">关于</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-toggle" aria-label="切换主题"><span class="icon">🌙</span></button>
+        <button class="menu-toggle" aria-label="菜单" aria-expanded="false"><span>☰</span></button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container-narrow">
+    <article>
+      <header class="blog-post-header" data-animate="fade">
+        <h1>为什么我放弃了 Notion 转向 Obsidian</h1>
+        <div class="blog-post-meta">
+          <time datetime="2025-10-22">2025年10月22日</time>
+          <span class="sep">·</span>
+          <span>阅读时间约 6 分钟</span>
+        </div>
+        <div class="blog-post-tags">
+          <span class="tag">工具</span>
+          <span class="tag">效率</span>
+          <span class="tag">笔记</span>
+        </div>
+      </header>
+
+      <div class="blog-post-content" data-animate>
+        <p>我用 Notion 两年了。从最初的惊艳到后来的疲惫，这个过程中我对"笔记工具"的理解发生了根本性的转变。两个月前，我终于下定决心将所有笔记迁移到 Obsidian。这篇文章记录我的思考过程。</p>
+
+        <h2>Notion 做对了什么</h2>
+        <p>2023 年初第一次接触 Notion 时，我的感受是震撼的。一个 All-in-One 的工作空间，集成了笔记、数据库、看板、日历、Wiki——而且界面设计得非常精致。我开始将一切内容都往 Notion 里搬：</p>
+        <ul>
+          <li>技术笔记和代码片段</li>
+          <li>项目管理和任务追踪</li>
+          <li>读书笔记和文章收藏</li>
+          <li>旅行计划和购物清单</li>
+        </ul>
+
+        <p>Notion 的 Database 功能尤其强大。通过关联、汇总、筛选、排序，你可以搭建出高度定制化的工作流。我在上面搭建了一个完整的<strong>个人知识管理系统</strong>，包含技术 Wiki、项目看板和学习进度追踪。</p>
+
+        <h2>裂痕：什么时候开始感到不舒服</h2>
+        <p>大约使用一年后，问题开始浮现：</p>
+
+        <h3>1. 离线体验极差</h3>
+        <p>这是压倒骆驼的最后一根稻草。有一次在飞机上想查一个数据库迁移的笔记，打开 Notion——空白页面，转圈，然后超时。<strong>你的数据不在你的设备上，它在 Notion 的服务器上</strong>。Notion 至今没有真正的离线模式。</p>
+
+        <h3>2. 性能问题</h3>
+        <p>随着笔记数量增长（我的 Workspace 最终有超过 2000 个页面），Notion 的打开速度明显变慢。尤其是 Database 页面，从点击到内容加载出来，经常需要 3-5 秒。对于一个笔记工具来说，这个延迟是不可接受的。</p>
+
+        <h3>3. 格式锁定</h3>
+        <p>Notion 使用自己的专有格式。虽然支持导出 Markdown 和 CSV，但导出的内容会丢失大量结构化信息（尤其是 Database 数据）。这让我意识到，我在 Notion 上投入的时间越多，迁移成本就越高。</p>
+
+        <h3>4. 过度设计</h3>
+        <p>Notion 太"重"了。当我只是想快速记下一个想法时，我面对的是一个功能齐全的富文本编辑器、一个可以选择模板的菜单、一堆侧边栏和图标。这种"重"在前期是加分项，后期却成了阻碍。</p>
+
+        <h2>为什么是 Obsidian</h2>
+        <p>Obsidian 解决了 Notion 让我痛苦的每一个点：</p>
+
+        <div class="card" style="margin: var(--spacing-lg) 0;">
+          <p style="margin-bottom: var(--spacing-sm);"><strong>📁 本地文件，完全控制</strong></p>
+          <p style="margin-bottom: 0;">所有笔记都是纯 Markdown 文件，存在你的本地磁盘上。你可以用任何文本编辑器打开，可以用 Git 做版本控制，可以用任意工具做备份。数据的所有权 100% 在你手中。</p>
+        </div>
+
+        <div class="card" style="margin: var(--spacing-lg) 0;">
+          <p style="margin-bottom: var(--spacing-sm);"><strong>⚡ 极速启动</strong></p>
+          <p style="margin-bottom: 0;">Obsidian 基于 Electron，但因为只读取本地文件，启动和搜索几乎即时。打开一个包含 2000+ 笔记的 Vault，耗时不到 1 秒。</p>
+        </div>
+
+        <div class="card" style="margin: var(--spacing-lg) 0;">
+          <p style="margin-bottom: var(--spacing-sm);"><strong>🔗 双向链接</strong></p>
+          <p style="margin-bottom: 0;">Obsidian 的核心设计理念就是链接。通过 <code>[[wiki-link]]</code> 语法，笔记之间形成网状结构。图谱视图（Graph View）让你可视化地探索知识之间的关联——这是 Notion 做不到的。</p>
+        </div>
+
+        <div class="card" style="margin: var(--spacing-lg) 0;">
+          <p style="margin-bottom: var(--spacing-sm);"><strong>🔌 插件生态</strong></p>
+          <p style="margin-bottom: 0;">Obsidian 的社区插件非常活跃。Dataview 可以替代 Notion 的 Database 功能，Excalidraw 提供白板绘图，Calendar 提供日记导航。你只安装你需要的。</p>
+        </div>
+
+        <h2>迁移方案</h2>
+        <p>迁移过程大约花了我一个周末。步骤拆解如下：</p>
+
+        <ol>
+          <li><strong>导出</strong>：使用 Notion 的"导出为 Markdown & CSV"功能，选择"包含子页面"</li>
+          <li><strong>清理</strong>：导出的 Markdown 文件会有很多 Notion 特有的格式残留，我用了一个简单的 Rust CLI 脚本批量清理 UUID 文件名、空行和损坏的链接</li>
+          <li><strong>重组</strong>：在 Obsidian 中重新组织文件夹结构。我放弃了 Notion 那种严格的层级结构，改用更扁平化的组织方式 + 标签</li>
+          <li><strong>Database 重建</strong>：原先在 Notion 中的项目追踪看板，我用 Dataview 插件重建。虽然不如 Notion 的 Database 直观，但功能上没有缺失</li>
+          <li><strong>同步方案</strong>：使用 Obsidian Sync（付费）或自建 Git + cron 自动提交的方案，在多设备间同步</li>
+        </ol>
+
+        <h2>我失去的和得到的</h2>
+        <p><strong>失去的</strong>：</p>
+        <ul>
+          <li>所见即所得的富文本编辑体验（Obsidian 默认是源码模式，虽然可以开 Live Preview）</li>
+          <li>内置的数据库功能（Dataview 的语法学习曲线较陡）</li>
+          <li>协作功能（Obsidian 不适合多人实时协作编辑）</li>
+        </ul>
+
+        <p><strong>得到的</strong>：</p>
+        <ul>
+          <li>完全的数据所有权和控制权</li>
+          <li>飞快的启动和搜索速度</li>
+          <li>双向链接带来的知识发现</li>
+          <li>用 Git 做版本控制和备份的灵活性</li>
+          <li>一个更简单、更纯粹的写作环境</li>
+        </ul>
+
+        <h2>总结</h2>
+        <p>Notion 和 Obsidian 不是谁替代谁的问题——它们瞄准的是不同的需求。如果你需要团队协作、丰富的可视化数据库和 All-in-One 工作空间，Notion 依然是很好的选择。但如果你像我一样，更关注<strong>个人知识管理、写作体验和数据所有权</strong>，Obsidian 值得一试。</p>
+
+        <p>最终，工具是为人服务的。不要为了用工具而用工具。找到最适合自己工作流的那一个，然后专注于创造内容本身。</p>
+      </div>
+
+      <div class="blog-post-footer">
+        <a href="./" class="btn btn-ghost">← 返回文章列表</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-nav">
+        <a href="/">首页</a>
+        <a href="./">文章</a>
+        <a href="../about.html">关于</a>
+      </div>
+      <p class="footer-copyright">&copy; 2025 林宇辰. Powered by GitHub Pages.</p>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
