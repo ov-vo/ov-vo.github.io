@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spring Security 学习笔记：从零搭建认证授权体系 — 林宇辰的博客</title>
+  <meta name="description" content="Spring Security 入门学习笔记，涵盖 SecurityFilterChain、UserDetailsService、PasswordEncoder 配置，以及基于角色的访问控制和自定义登录页。">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <meta property="og:title" content="Spring Security 学习笔记：从零搭建认证授权体系">
+  <meta property="og:description" content="Spring Security 入门实践笔记，含完整代码示例">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.ahhh.fun/blog/spring-security-notes.html">
+  <meta property="article:published_time" content="2026-05-31">
+  <meta property="article:author" content="林宇辰">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Spring Security 学习笔记：从零搭建认证授权体系",
+    "datePublished": "2026-05-31",
+    "author": {"@type": "Person", "name": "林宇辰"},
+    "description": "Spring Security 入门实践笔记，涵盖 SecurityFilterChain、UserDetailsService、RBAC 等核心概念"
+  }
+  </script>
+  <script>
+    (function(){var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}})();
+  </script>
+</head>
+<body>
+
+  <nav class="nav" role="navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">林宇辰</a>
+      <div class="nav-links">
+        <a href="/">首页</a>
+        <a href="./">文章</a>
+        <a href="../about.html">关于</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-toggle" aria-label="切换主题"><span class="icon">🌙</span></button>
+        <button class="menu-toggle" aria-label="菜单" aria-expanded="false"><span>☰</span></button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container-narrow">
+    <article>
+      <header class="blog-post-header" data-animate="fade">
+        <h1>Spring Security 学习笔记：从零搭建认证授权体系</h1>
+        <div class="blog-post-meta">
+          <time datetime="2026-05-31">2026年5月31日</time>
+          <span class="sep">·</span>
+          <span>阅读时间约 12 分钟</span>
+        </div>
+        <div class="blog-post-tags">
+          <span class="tag">Spring Security</span>
+          <span class="tag">Java</span>
+          <span class="tag">Spring Boot</span>
+          <span class="tag">安全</span>
+        </div>
+      </header>
+
+      <div class="blog-post-content" data-animate>
+
+        <p>最近接手了一个企业内部管理系统，安全模块基于 Spring Security 构建。虽然之前用过不少认证框架，但深入 Spring Security 的配置细节时还是踩了不少坑。于是决定从头搭建一个学习项目，把核心概念逐个吃透。这篇文章就是我的学习笔记。</p>
+
+        <blockquote>
+          <p><strong>项目地址</strong>：<a href="https://github.com/ov-vo/spring-security-learning" target="_blank" rel="noopener">github.com/ov-vo/spring-security-learning</a></p>
+          <p>技术栈：Java 21 + Spring Boot 3.2.4 + Spring Security 6.x + Thymeleaf + Maven</p>
+        </blockquote>
+
+        <h2>一、Spring Security 是什么</h2>
+
+        <p>简单来说，Spring Security 是 Spring 生态中的<strong>安全框架</strong>，负责处理两大核心问题：</p>
+
+        <ul>
+          <li><strong>认证（Authentication）</strong>——你是谁？验证用户身份</li>
+          <li><strong>授权（Authorization）</strong>——你能做什么？控制用户权限</li>
+        </ul>
+
+        <p>它通过一系列 <strong>过滤器（Filter）</strong> 拦截 HTTP 请求，在请求到达 Controller 之前完成身份验证和权限检查。这些过滤器的集合被称为 <strong>SecurityFilterChain</strong>——这是理解 Spring Security 最重要的概念。</p>
+
+        <h2>二、项目初始化</h2>
+
+        <p>创建一个 Spring Boot 项目，在 <code>pom.xml</code> 中引入以下核心依赖：</p>
+
+        <pre><code>&lt;!-- 核心安全依赖 --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-security&lt;/artifactId&gt;
+&lt;/dependency&gt;
+
+&lt;!-- Web 支持 --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+&lt;/dependency&gt;
+
+&lt;!-- 模板引擎（用于自定义登录页） --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-thymeleaf&lt;/artifactId&gt;
+&lt;/dependency&gt;
+
+&lt;!-- 开发热重载 --&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-devtools&lt;/artifactId&gt;
+    &lt;scope&gt;runtime&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+
+        <p>项目结构保持简洁：</p>
+
+        <pre><code>spring-security-learning/
+├── pom.xml
+├── src/main/java/com/example/security/
+│   ├── SecurityLearningApplication.java    # 启动类
+│   ├── config/
+│   │   └── SecurityConfig.java            # ⭐ 安全配置核心
+│   └── controller/
+│       ├── DemoController.java            # 演示不同权限等级的接口
+│       └── LoginController.java           # 登录页控制器
+└── src/main/resources/
+    ├── application.properties
+    └── templates/
+        └── login.html                      # 自定义登录页面</code></pre>
+
+        <h2>三、核心配置：SecurityConfig</h2>
+
+        <p>这是整个项目的心脏。Spring Security 6.x 使用<strong>基于 Lambda 的 DSL</strong> 来配置安全规则，废弃了旧版的 <code>WebSecurityConfigurerAdapter</code>。</p>
+
+        <h3>3.1 SecurityFilterChain —— 安全过滤器链</h3>
+
+        <pre><code>@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            // 1. 按 URL 规则授权
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/public/**").permitAll()    // 公开访问
+                .requestMatchers("/admin/**").hasRole("ADMIN") // 仅管理员
+                .anyRequest().authenticated()                 // 其余需要登录
+            )
+            // 2. 表单登录
+            .formLogin(form -> form
+                .loginPage("/login")      // 自定义登录页 URL
+                .permitAll()              // 登录页允许所有人访问
+            )
+            // 3. HTTP Basic 认证（方便 curl 测试）
+            .httpBasic(Customizer.withDefaults())
+            // 4. 学习阶段关闭 CSRF（生产环境请务必开启！）
+            .csrf(csrf -> csrf.disable());
+
+        return http.build();
+    }
+}</code></pre>
+
+        <p>让我逐条解释这段配置：</p>
+
+        <div class="card" style="margin: var(--spacing-lg) 0;">
+          <p style="margin-bottom: var(--spacing-sm);"><strong>🔓 permitAll()</strong></p>
+          <p style="margin-bottom: 0;">不需要任何认证即可访问。适用于首页、静态资源、注册/登录页。</p>
+        </div>
+
+        <div class="card" style="margin: var(--spacing-lg) 0;">
+          <p style="margin-bottom: var(--spacing-sm);"><strong>🔐 authenticated()</strong></p>
+          <p style="margin-bottom: 0;">只要登录了就能访问，不检查角色。适用于需要登录但无特殊权限要求的页面。</p>
+        </div>
+
+        <div class="card" style="margin: var(--spacing-lg) 0;">
+          <p style="margin-bottom: var(--spacing-sm);"><strong>👑 hasRole("ADMIN")</strong></p>
+          <p style="margin-bottom: 0;">必须登录且持有 ADMIN 角色。Spring Security 会自动在角色名前加 <code>ROLE_</code> 前缀，所以 <code>hasRole("ADMIN")</code> 实际匹配的是 <code>ROLE_ADMIN</code>。</p>
+        </div>
+
+        <p>此外还有 <code>hasAuthority()</code>（精确匹配权限名，不加前缀）、<code>hasAnyRole()</code>（满足任一角色即可）等变体。</p>
+
+        <h3>3.2 PasswordEncoder —— 密码编码器</h3>
+
+        <pre><code>@Bean
+public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+}</code></pre>
+
+        <p><strong>BCrypt</strong> 是目前主流的密码哈希算法，自带盐值（salt），能有效抵御彩虹表攻击。<strong>永远不要把明文密码存入数据库或写在代码里</strong>——即使是学习项目，也建议从第一天就养成使用 BCrypt 的习惯。</p>
+
+        <h3>3.3 UserDetailsService —— 用户数据源</h3>
+
+        <p>这个 Bean 定义了"用户从哪里来"。学习阶段我们用内存用户：</p>
+
+        <pre><code>@Bean
+public UserDetailsService userDetailsService(PasswordEncoder encoder) {
+    InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+
+    // 普通用户
+    manager.createUser(User.withUsername("user")
+            .password(encoder.encode("password"))
+            .roles("USER")
+            .build());
+
+    // 管理员
+    manager.createUser(User.withUsername("admin")
+            .password(encoder.encode("password"))
+            .roles("USER", "ADMIN")
+            .build());
+
+    return manager;
+}</code></pre>
+
+        <p>这里展示了两个关键设计：</p>
+        <ul>
+          <li><code>encoder.encode("password")</code> —— 存储前先对密码做 BCrypt 哈希</li>
+          <li>admin 用户同时拥有 <code>USER</code> 和 <code>ADMIN</code> 角色，这意味着 admin 可以访问所有 user 能访问的资源</li>
+        </ul>
+
+        <p>在实际项目中，你会把这个 <code>InMemoryUserDetailsManager</code> 替换成基于数据库的 <code>JdbcUserDetailsManager</code>，或者自己实现 <code>UserDetailsService</code> 接口来对接任何用户存储（数据库、LDAP、外部 API 等）。</p>
+
+        <h2>四、控制器：验证权限分层</h2>
+
+        <p>为了直观感受权限控制的效果，我编写了三个层级的接口：</p>
+
+        <h3>公开接口 —— 无需登录</h3>
+
+        <pre><code>@RestController
+public class DemoController {
+
+    @GetMapping("/public/hello")
+    public String publicHello() {
+        return "Hello, 这是一个公开接口！任何人都可以访问。";
+    }
+}</code></pre>
+
+        <h3>用户接口 —— 需要登录但不限角色</h3>
+
+        <pre><code>@GetMapping("/user/hello")
+public Map&lt;String, Object&gt; userHello() {
+    return Map.of(
+        "message", "你好，认证用户！",
+        "username", getCurrentUsername(),
+        "roles", getCurrentRoles()
+    );
+}
+
+@GetMapping("/user/me")
+public Map&lt;String, Object&gt; currentUser() {
+    Authentication auth = SecurityContextHolder
+        .getContext().getAuthentication();
+    return Map.of(
+        "username", auth.getName(),
+        "authorities", auth.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .toList(),
+        "authenticated", auth.isAuthenticated()
+    );
+}</code></pre>
+
+        <p>这里展示了如何在代码中获取当前用户信息——通过 <code>SecurityContextHolder.getContext().getAuthentication()</code>，这是 Spring Security 的<strong>安全上下文</strong>，存储着当前请求的用户认证信息。整个调用链是这样工作的：</p>
+
+        <pre><code>SecurityContextHolder           ← 全局持有者（基于 ThreadLocal）
+  └── SecurityContext           ← 当前请求的安全上下文
+        └── Authentication      ← 认证对象
+              ├── getName()          → "user"
+              ├── getAuthorities()   → [ROLE_USER]
+              └── isAuthenticated()  → true</code></pre>
+
+        <h3>管理员接口 —— 需要 ADMIN 角色</h3>
+
+        <pre><code>@GetMapping("/admin/hello")
+public Map&lt;String, Object&gt; adminHello() {
+    return Map.of(
+        "message", "欢迎，管理员！",
+        "username", getCurrentUsername()
+    );
+}
+
+@GetMapping("/admin/system-info")
+public Map&lt;String, Object&gt; systemInfo() {
+    return Map.of(
+        "os.name", System.getProperty("os.name"),
+        "java.version", System.getProperty("java.version"),
+        "availableProcessors", Runtime.getRuntime().availableProcessors()
+    );
+}</code></pre>
+
+        <p><code>/admin/system-info</code> 是一个很好的实战示例——暴露敏感的服务器信息。在生产环境中，这类接口必须严格限制访问权限。</p>
+
+        <h2>五、自定义登录页</h2>
+
+        <p>Spring Security 自带一个简陋的默认登录页。但对于任何正式项目来说，自定义登录页是必选。我的登录页通过 Thymeleaf 模板渲染：</p>
+
+        <pre><code>@Controller
+public class LoginController {
+
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login";  // 对应 templates/login.html
+    }
+}</code></pre>
+
+        <pre><code>&lt;!-- templates/login.html --&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html xmlns:th="http://www.thymeleaf.org"&gt;
+&lt;head&gt;
+    &lt;title&gt;登录 - Spring Security Learning&lt;/title&gt;
+    &lt;style&gt;
+        body { font-family: system-ui; display: flex;
+               justify-content: center; align-items: center;
+               min-height: 100vh; background: #f5f5f7; }
+        .login-box { background: white; padding: 40px;
+                     border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,.06);
+                     width: 360px; }
+        input { width: 100%; padding: 10px 14px; margin: 8px 0;
+                border: 1px solid #d2d2d7; border-radius: 8px; font-size: 15px; }
+        button { width: 100%; padding: 12px; background: #0071e3;
+                 color: white; border: none; border-radius: 8px;
+                 font-size: 16px; font-weight: 600; cursor: pointer; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="login-box"&gt;
+        &lt;h2 style="text-align:center"&gt;🔐 系统登录&lt;/h2&gt;
+
+        &lt;!-- 测试账号提示 --&gt;
+        &lt;div style="background:#f0f7ff; padding:12px; border-radius:8px;
+                    margin:16px 0; font-size:13px; color:#555;"&gt;
+            &lt;strong&gt;测试账号&lt;/strong&gt;&lt;br&gt;
+            普通用户：user / password&lt;br&gt;
+            管理员：admin / password
+        &lt;/div&gt;
+
+        &lt;form th:action="@{/login}" method="post"&gt;
+            &lt;input type="text" name="username"
+                   placeholder="用户名" required&gt;
+            &lt;input type="password" name="password"
+                   placeholder="密码" required&gt;
+            &lt;button type="submit"&gt;登 录&lt;/button&gt;
+        &lt;/form&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+        <p>这里有两个关键约定：</p>
+        <ol>
+          <li>表单的 <code>action</code> 必须指向 <code>@{/login}</code>，且 <code>method</code> 必须为 <code>POST</code></li>
+          <li>用户名和密码的输入框 <code>name</code> 属性必须是 <code>username</code> 和 <code>password</code>（这是 Spring Security 的默认字段名）</li>
+        </ol>
+
+        <h2>六、实际测试</h2>
+
+        <p>启动项目后，你可以用 curl 快速验证各种场景：</p>
+
+        <pre><code># 1. 访问公开接口 —— 无需认证 ✅
+curl http://localhost:8080/public/hello
+# → Hello, 这是一个公开接口！
+
+# 2. 访问用户接口 —— 需要认证（不带凭据）❌
+curl http://localhost:8080/user/hello
+# → 返回 401 / 重定向到登录页
+
+# 3. 用 Basic Auth 访问用户接口 ✅
+curl -u user:password http://localhost:8080/user/hello
+# → {"message":"你好，认证用户！","username":"user","roles":"ROLE_USER"}
+
+# 4. 普通用户访问管理接口 ❌ 403 Forbidden
+curl -u user:password http://localhost:8080/admin/system-info
+# → 返回 403
+
+# 5. 管理员访问管理接口 ✅
+curl -u admin:password http://localhost:8080/admin/system-info
+# → {"os.name":"Mac OS X","java.version":"21.0.2",...}</code></pre>
+
+        <p>第 4 个测试尤其值得注意：user <strong>已经通过了认证</strong>，但因为缺少 <code>ADMIN</code> 角色，返回的是 <strong>403 Forbidden</strong> 而非 401 Unauthorized。这完美展示了"认证"和"授权"是两个独立的概念。</p>
+
+        <h2>七、踩坑记录</h2>
+
+        <h3>坑 1：CSRF 导致 POST 请求 403</h3>
+        <p>如果你的登录表单提交后一直返回 403，很可能是 CSRF 保护在捣乱。Spring Security 默认开启 CSRF 保护，要求所有 POST 请求携带 CSRF token。学习阶段可以暂时关闭，但<strong>上线前务必重新开启</strong>：</p>
+        <pre><code>// 学习时关闭
+http.csrf(csrf -> csrf.disable());
+
+// 上线时恢复（删除这行即可，默认就是开启的）
+// 并在 Thymeleaf 表单中加上：
+// &lt;input type="hidden" th:name="${_csrf.parameterName}"
+//        th:value="${_csrf.token}" /&gt;</code></pre>
+
+        <h3>坑 2：Spring Security 6.x 的 API 变化</h3>
+        <p>如果你参考的是旧版教程，可能会看到 <code>WebSecurityConfigurerAdapter</code> 的用法。这个类在 Spring Security 5.7+ 被标记为弃用，在 6.x 中已完全移除。新版本统一使用 <strong>基于 Bean 的配置</strong>：定义 <code>SecurityFilterChain</code> Bean 并在其中使用 Lambda 表达式配置规则。</p>
+
+        <h3>坑 3：角色名自动加 ROLE_ 前缀</h3>
+        <p>使用 <code>.hasRole("ADMIN")</code> 时，Spring Security 自动在前面加上 <code>ROLE_</code>，变成 <code>ROLE_ADMIN</code>。如果你在 <code>.roles()</code> 里写成 <code>"ROLE_ADMIN"</code>，最终会变成 <code>ROLE_ROLE_ADMIN</code>——这个坑已经坑了无数人。</p>
+
+        <h2>八、学习路线图</h2>
+
+        <p>这个项目只是 Spring Security 的入门第一步。基于这个基础，后续可以逐步深入：</p>
+
+        <ol>
+          <li><strong>数据库用户存储</strong> —— 用 Spring Data JPA + MySQL/PostgreSQL 替代内存用户，实现 <code>UserDetailsService</code> 接口</li>
+          <li><strong>注册与邮箱验证</strong> —— 实现完整的注册流程，加入邮箱激活</li>
+          <li><strong>JWT 无状态认证</strong> —— 前后端分离场景下，用 JWT 替代 Session</li>
+          <li><strong>OAuth2 / OIDC</strong> —— 接入 GitHub / Google 第三方登录</li>
+          <li><strong>方法级安全</strong> —— 使用 <code>@PreAuthorize</code>、<code>@PostAuthorize</code> 做细粒度权限控制</li>
+          <li><strong>自定义认证提供者</strong> —— 实现 <code>AuthenticationProvider</code> 对接企业已有的认证系统</li>
+          <li><strong>安全测试</strong> —— 用 <code>@WithMockUser</code> 和 <code>MockMvc</code> 编写安全测试</li>
+        </ol>
+
+        <h2>总结</h2>
+
+        <p>Spring Security 的配置看起来繁琐，但核心思想其实非常清晰：</p>
+
+        <blockquote>
+          <p><strong>过滤器链（FilterChain）拦截请求 → 认证管理器验证身份 → 投票器（Voter）决定是否有权限 → 放行或拒绝。</strong></p>
+        </blockquote>
+
+        <p>理解了这个流程，再回头看配置代码，每一行都变得有据可循。如果你也在学习 Spring Security，建议不要试图一上来就配置一个"完整的企业级安全方案"——那只会让你迷失在无数配置项中。像我这样从最小可运行项目开始，逐步添加功能，学习效率会高得多。</p>
+
+        <p>完整代码已开源在 <a href="https://github.com/ov-vo/spring-security-learning" target="_blank" rel="noopener">GitHub</a>，欢迎 clone 下来自己跑一跑，把每个接口用 curl 测一遍，理解会更加深刻。</p>
+
+      </div>
+
+      <div class="blog-post-footer">
+        <a href="./" class="btn btn-ghost">← 返回文章列表</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-nav">
+        <a href="/">首页</a>
+        <a href="./">文章</a>
+        <a href="../about.html">关于</a>
+      </div>
+      <p class="footer-copyright">&copy; 2026 林宇辰. Powered by GitHub Pages.</p>
+    </div>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

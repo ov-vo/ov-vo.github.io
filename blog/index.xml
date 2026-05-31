@@ -5,8 +5,14 @@
     <link>https://www.ahhh.fun/blog/</link>
     <description>技术分享与生活随想</description>
     <language>zh-CN</language>
-    <lastBuildDate>Mon, 15 Dec 2025 00:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 31 May 2026 00:00:00 +0800</lastBuildDate>
     <atom:link href="https://www.ahhh.fun/blog/index.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>Spring Security 学习笔记：从零搭建认证授权体系</title>
+      <link>https://www.ahhh.fun/blog/spring-security-notes.html</link>
+      <pubDate>Sat, 31 May 2026 00:00:00 +0800</pubDate>
+      <description>Spring Security 入门实践笔记，涵盖 SecurityFilterChain、UserDetailsService、RBAC 等核心概念。</description>
+    </item>
     <item>
       <title>从零搭建 SwiftUI macOS 菜单栏应用</title>
       <link>https://www.ahhh.fun/blog/swiftui-menubar-app.html</link>
