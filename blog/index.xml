@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>林宇辰的博客</title>
+    <title>Cookie 的小窝</title>
     <link>https://www.ahhh.fun/blog/</link>
-    <description>技术分享与生活随想</description>
+    <description>一只约克夏眼中的技术世界与生活趣事</description>
     <language>zh-CN</language>
     <lastBuildDate>Sat, 31 May 2026 00:00:00 +0800</lastBuildDate>
     <atom:link href="https://www.ahhh.fun/blog/index.xml" rel="self" type="application/rss+xml"/>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spring Security 学习笔记：从零搭建认证授权体系 — 林宇辰的博客</title>
+  <title>Spring Security 学习笔记：从零搭建认证授权体系 — Cookie 的小窝</title>
   <meta name="description" content="Spring Security 入门学习笔记，涵盖 SecurityFilterChain、UserDetailsService、PasswordEncoder 配置，以及基于角色的访问控制和自定义登录页。">
   <link rel="stylesheet" href="../css/style.css">
   <link rel="icon" href="../cookie.png" type="image/png">
@@ -12,14 +12,14 @@
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://www.ahhh.fun/blog/spring-security-notes.html">
   <meta property="article:published_time" content="2026-05-31">
-  <meta property="article:author" content="林宇辰">
+  <meta property="article:author" content="Cookie">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     "headline": "Spring Security 学习笔记：从零搭建认证授权体系",
     "datePublished": "2026-05-31",
-    "author": {"@type": "Person", "name": "林宇辰"},
+    "author": {"@type": "Person", "name": "Cookie"},
     "description": "Spring Security 入门实践笔记，涵盖 SecurityFilterChain、UserDetailsService、RBAC 等核心概念"
   }
   </script>
@@ -31,7 +31,7 @@
 
   <nav class="nav" role="navigation">
     <div class="nav-inner">
-      <a href="/" class="nav-brand">林宇辰</a>
+      <a href="/" class="nav-brand">Cookie 🐾</a>
       <div class="nav-links">
         <a href="/">首页</a>
         <a href="./">文章</a>
@@ -433,7 +433,7 @@ http.csrf(csrf -> csrf.disable());
         <a href="./">文章</a>
         <a href="../about.html">关于</a>
       </div>
-      <p class="footer-copyright">&copy; 2026 林宇辰. Powered by GitHub Pages.</p>
+      <p class="footer-copyright">© 2026 Cookie the Yorkie. Powered by GitHub Pages.</p>
     </div>
   </footer>
 

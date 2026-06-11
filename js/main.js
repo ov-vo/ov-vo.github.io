@@ -1,6 +1,6 @@
 /**
  * Apple-Style Personal Site — Main JavaScript
- * Persona: 林宇辰 (Yu Chen Lin)
+ * Persona: Cookie the Yorkie 🐶
  * Zero dependencies, vanilla JS only.
  */
 (function () {
