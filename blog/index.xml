@@ -5,8 +5,26 @@
     <link>https://www.ahhh.fun/blog/</link>
     <description>一只约克夏眼中的技术世界与生活趣事</description>
     <language>zh-CN</language>
-    <lastBuildDate>Sat, 31 May 2026 00:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 13 Jun 2026 00:00:00 +0800</lastBuildDate>
     <atom:link href="https://www.ahhh.fun/blog/index.xml" rel="self" type="application/rss+xml"/>
+    <item>
+      <title>《增广贤文》全文</title>
+      <link>https://www.ahhh.fun/blog/zeng-guang-xian-wen.html</link>
+      <pubDate>Sat, 13 Jun 2026 00:00:00 +0800</pubDate>
+      <description>《增广贤文》全文收录，包含上卷和下卷。明清蒙学经典，汇集古人生活智慧和处世哲学。</description>
+    </item>
+    <item>
+      <title>三大国内AI编程助手对比：Codebuddy vs Qoder vs TRAE</title>
+      <link>https://www.ahhh.fun/blog/ai-coding-assistant-comparison.html</link>
+      <pubDate>Thu, 11 Jun 2026 00:00:00 +0800</pubDate>
+      <description>深入对比腾讯Codebuddy、阿里Qoder和字节TRAE三款AI编程助手的功能与使用体验。</description>
+    </item>
+    <item>
+      <title>SpringBoot 2.x + Solon 让 Java 8 项目接入 MCP 协议</title>
+      <link>https://www.ahhh.fun/blog/springboot2-solon-mcp.html</link>
+      <pubDate>Thu, 04 Jun 2026 00:00:00 +0800</pubDate>
+      <description>详解双容器架构，用 Solon-mcp 在 SpringBoot 2.x（Java 8）项目中零侵入实现 MCP 服务端。</description>
+    </item>
     <item>
       <title>Spring Security 学习笔记：从零搭建认证授权体系</title>
       <link>https://www.ahhh.fun/blog/spring-security-notes.html</link>
